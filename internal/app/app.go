@@ -3,9 +3,11 @@ package app
 import (
 	"context"
 	"fmt"
+	"github.com/joho/godotenv"
 	"log/slog"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"syscall"
 	"time"
@@ -121,9 +123,18 @@ func (a *App) WaitForShutdown() error {
 func (a *App) Run() error {
 	db := database.InitDB()
 
-	a.container.server = httpInterface.NewServer(a.logger, db)
+	err := godotenv.Load()
 
-	err := a.Start()
+	address := os.Getenv("APP_ADDRESS")
+	port, err := strconv.Atoi(os.Getenv("APP_PORT"))
+
+	if err != nil {
+		port = 0
+	}
+
+	a.container.server = httpInterface.NewServer(a.logger, db, address, port)
+
+	err = a.Start()
 	if err != nil {
 		a.logger.Error(fmt.Sprintf("Cannot start application %v", err))
 		return err

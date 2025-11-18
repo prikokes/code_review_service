@@ -18,6 +18,7 @@ type Server struct {
 	server    *http.Server
 	mu        *sync.RWMutex
 	isRunning bool
+	address   string
 	port      int
 	logger    *slog.Logger
 
@@ -27,7 +28,13 @@ type Server struct {
 	statsHandler *StatsHandler
 }
 
-func NewServer(logger *slog.Logger, db *gorm.DB) *Server {
+func NewServer(logger *slog.Logger, db *gorm.DB, address string, port int) *Server {
+	if address == "" {
+		address = "0.0.0.0"
+	}
+	if port == 0 {
+		port = 8080
+	}
 	return &Server{
 		userHandler:  NewUserHandler(logger, db),
 		teamHandler:  NewTeamHandler(logger, db),
@@ -35,8 +42,9 @@ func NewServer(logger *slog.Logger, db *gorm.DB) *Server {
 		statsHandler: NewStatsHandler(logger, db),
 		logger:       logger,
 
-		port: 8080,
-		mu:   &sync.RWMutex{},
+		address: address,
+		port:    port,
+		mu:      &sync.RWMutex{},
 	}
 }
 
@@ -54,7 +62,7 @@ func (s *Server) Start(ctx context.Context) error {
 	s.registerRoutes(router)
 
 	s.server = &http.Server{
-		Addr:         fmt.Sprintf("0.0.0.0:%d", s.port),
+		Addr:         fmt.Sprintf("%s:%d", s.address, s.port),
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,

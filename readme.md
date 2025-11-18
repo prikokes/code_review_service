@@ -16,6 +16,8 @@ DB_USER=postgres
 DB_PASSWORD=postgres
 DB_NAME=code_review_db
 DB_PORT=5432
+APP_ADDRESS=0.0.0.0
+APP_PORT=8080
 ```
 Переменные окружения также могут быть загружены программой из .env файла.
 
